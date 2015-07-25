@@ -29,6 +29,14 @@ def get_coffee_maker_aabb(img):
     return top_left, bottom_right
 
 
+def extract_coffee_pot_as_new_image(img, top_left, bottom_right):
+    offset = (13, 30)
+    offset = (offset[0] + top_left[0], offset[1] + top_left[1])
+    size = (50, 50)
+    img2 = img[offset[1]:offset[1]+size[1], offset[0]:offset[0]+size[0]]
+    return img2
+
+
 for img_file in sys.argv[1:]:
     # Load an color image in grayscale
     print "Opening", img_file
@@ -37,8 +45,10 @@ for img_file in sys.argv[1:]:
     img3 = extract_red_color_as_new_image(img)
     top_left, bottom_right = get_coffee_maker_aabb(img3)
 
-    # cv2.rectangle(img, top_left, bottom_right, 127, 2)
+    img = extract_coffee_pot_as_new_image(img, top_left, bottom_right)
+
+    cv2.rectangle(img, top_left, bottom_right, 255, 2)
 
     our_file = 'temp/' + img_file.split('/')[1].split('.')[0] + '.png'
     print "Writing", our_file
-    print cv2.imwrite(our_file, img3)
+    print cv2.imwrite(our_file, img)
