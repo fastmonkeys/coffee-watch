@@ -34,6 +34,21 @@ def extract_black_color_as_new_image(img):
     return img3
 
 
+def extract_coffee_color_as_new_image(img):
+    lower = np.array([0, 0, 0], dtype="uint8")
+    upper = np.array([35, 35, 35], dtype="uint8")
+
+    mask = cv2.inRange(img, lower, upper)
+    mask_inv = cv2.bitwise_not(mask)
+    img3 = cv2.bitwise_and(img, img, mask=mask)
+
+    image = np.zeros(img3.shape, np.uint8)
+    image[:] = (255, 255, 255)
+
+    img3 = cv2.bitwise_or(img3, image, mask=mask_inv)
+    return img3
+
+
 def get_coffee_maker_aabb(img):
     template = cv2.imread('sample_images/sample.png', cv2.IMREAD_COLOR)
     w, h = template.shape[1], template.shape[0]
@@ -90,9 +105,31 @@ def get_center_pole_location(img):
     return top_left
 
 
+def get_coffee_level(img, position, name):
+    def measure_coffee_level(line):
+        # import pudb;pu.db
+        return sum(1 for l in line if not all(l[0]))
+    cv2.imwrite('temp2/%s_debug_source.png' % name, img)
+    img = extract_coffee_color_as_new_image(img)
+    cv2.imwrite('temp2/%s_debug_output.png' % name, img)
+
+    X_OFFSETS = [4, -4, 8, -8]
+    Y_OFFSET = 6
+    Y_MAX = 45
+
+    lines = [
+        img[
+            position[1] + Y_OFFSET:position[1] + Y_MAX,
+            position[0] - x_offset:position[0] - x_offset+1
+        ] for x_offset in X_OFFSETS
+    ]
+    cv2.imwrite('temp2/%s_debug_output2.png' % name, lines[0])
+    return [measure_coffee_level(line) for line in lines]
+
+
 for img_file in sys.argv[1:]:
     # Load an color image in grayscale
-    print "Opening", img_file
+    # print "Opening", img_file
     img = cv2.imread(img_file, cv2.IMREAD_COLOR)
 
     img3 = extract_red_color_as_new_image(img)
@@ -112,7 +149,9 @@ for img_file in sys.argv[1:]:
     cv2.rectangle(img, pot_tl, pot_br, (200, 200, 200), 2)
 
     pos = get_center_pole_location(img_pot)
-    print "Pot pos %r %r" % pos
+    # print "Pot pos %r %r" % pos
+
+    print "%s: %s" % (get_coffee_level(img_pot, pos, img_file.split('/')[1].split('.')[0]), img_file)
 
     # cv2.imshow('image', img_pot)
     # cv2.waitKey(0)
@@ -129,5 +168,5 @@ for img_file in sys.argv[1:]:
 
 
     our_file = 'temp/' + img_file.split('/')[1].split('.')[0] + '.png'
-    print "Writing", our_file
-    print cv2.imwrite(our_file, img)
+    # print "Writing", our_file
+    cv2.imwrite(our_file, img)
