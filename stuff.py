@@ -96,17 +96,17 @@ def get_center_pole_location(img, pot_tl, pot_br):
     h2, w2, d2 = pole_image2.shape
     img_src = get_sub_image(
         img_pot,
-        (max_loc[0] + w/2 - ceil(w2/2), max_loc[1]),
-        (max_loc[0] + w/2 + ceil(w2/2), max_loc[1] + h2)
+        (max_loc[0] + w/2 - ceil(w2/2.0), max_loc[1]),
+        (max_loc[0] + w/2 + ceil(w2/2.0), max_loc[1] + h2)
     )
 
-    cv2.rectangle(
-        img,
-        (real_top_left[0] + w/2 - w2/2, real_top_left[1]),
-        (real_top_left[0] + w/2 + w2/2, real_top_left[1] + h2),
-        (0, 0, 255),
-        2
-    )
+    # cv2.rectangle(
+    #     img,
+    #     (real_top_left[0] + w/2 - w2/2, real_top_left[1]),
+    #     (real_top_left[0] + w/2 + w2/2, real_top_left[1] + h2),
+    #     (0, 0, 255),
+    #     2
+    # )
     # import pudb;pu.db
     res = cv2.matchTemplate(img_src, pole_image2, cv2.TM_CCOEFF)
     min_val, max_val2, min_loc, max_loc = cv2.minMaxLoc(res)
@@ -188,11 +188,18 @@ def get_coffee_level(img, position, name):
             result = 0
 
     # import pudb;pu.db
-    IMG_X_OFFSET = -40
+    IMG_X_OFFSET = -60
     IMG_W = 10
     y_top = position[1] + Y_OFFSET
     y_middle = position[1] + Y_MAX - result
     y_bottom = position[1] + Y_MAX
+    cv2.rectangle(
+        img,
+        (position[0] + IMG_X_OFFSET-1, y_top-1),
+        (position[0] + IMG_X_OFFSET + IMG_W+1, y_bottom+1),
+        (255, 255, 255),
+        -1
+    )
     cv2.rectangle(
         img,
         (position[0] + IMG_X_OFFSET, y_top),
@@ -236,9 +243,9 @@ for img_file in sys.argv[1:]:
     if match:
         result = get_coffee_level(img, pos, img_file.split('/')[1].split('.')[0])
         print "%s: %s" % (result, img_file)
-        # cv2.rectangle(img, center_tl, center_br, (255, 255, 255), 2)
+        cv2.rectangle(img, center_tl, center_br, (255, 255, 255), 2)
     else:
-        # cv2.rectangle(img, center_tl, center_br, (0, 0, 255), 2)
+        cv2.rectangle(img, center_tl, center_br, (0, 0, 255), 2)
         print "No pot: %s" % img_file
 
     # print "GFROM %s %s to %s %s" % (center_tl[0],center_tl[1], center_br[0],center_br[1])
