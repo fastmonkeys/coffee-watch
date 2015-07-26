@@ -223,6 +223,9 @@ for img_file in sys.argv[1:]:
     # print "Opening", img_file
     img = cv2.imread(img_file, cv2.IMREAD_COLOR)
 
+    # TODO: Crop original image if needed
+    # img = get_sub_image(img, (300, 300), (700, 700))
+
     img3 = extract_red_color_as_new_image(img)
     top_left, bottom_right = get_coffee_maker_aabb(img3)
 
