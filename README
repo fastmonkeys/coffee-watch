@@ -4,6 +4,7 @@ mkvirtualenv coffee-watch
 use_env coffee-watch
 pip install numpy
 pip install matplotlib
+pip install requests
 
 ln -s /usr/local/Cellar/opencv/2.4.11_1/lib/python2.7/site-packages/cv.py ~/.virtualenvs/coffee-watch/lib/python2.7/site-packages
 ln -s /usr/local/Cellar/opencv/2.4.11_1/lib/python2.7/site-packages/cv2.so ~/.virtualenvs/coffee-watch/lib/python2.7/site-packages

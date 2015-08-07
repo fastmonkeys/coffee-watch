@@ -7,7 +7,7 @@ import cv2
 
 def extract_red_color_as_new_image(img):
     lower = np.array([0, 0, 50], dtype="uint8")
-    upper = np.array([40, 40, 255], dtype="uint8")
+    upper = np.array([60, 60, 255], dtype="uint8")
 
     mask = cv2.inRange(img, lower, upper)
     mask_inv = cv2.bitwise_not(mask)
@@ -61,9 +61,9 @@ def get_coffee_maker_aabb(img):
 
 
 def get_coffee_pot_location(img, top_left, bottom_right):
-    offset = (12, 25)
+    offset = (30, 14)
     offset = (offset[0] + top_left[0], offset[1] + top_left[1])
-    size = (64, 60)
+    size = (42, 34)
     top_left = (offset[0], offset[1])
     bottom_right = (offset[0]+size[0], offset[1]+size[1])
     return top_left, bottom_right
@@ -76,9 +76,12 @@ def get_sub_image(img, top_left, bottom_right):
 def get_center_pole_location(img, pot_tl, pot_br):
     pole_image = cv2.imread('sample_images/sample2.png', cv2.IMREAD_COLOR)
     h, w, d = pole_image.shape
+    img_pot_org = get_sub_image(img, pot_tl, pot_br)
+    cv2.imwrite('temp2/img_pot_org.png', img_pot_org)
     img_pot = extract_black_color_as_new_image(
-        get_sub_image(img, pot_tl, pot_br)
+        img_pot_org
     )
+    cv2.imwrite('temp2/img_pot.png', img_pot)
     pot_w = pot_br[0] - pot_tl[0]
     pos_x = max(pot_tl[0] - 2*pot_w, 0)
 
@@ -138,9 +141,9 @@ def get_coffee_level(img, position, name):
         return sum(
             1 for l in line
             if not all(l[0])), not all(not x.all() for x in line[:3])
-    cv2.imwrite('temp2/%s_debug_source.png' % name, img)
+    # cv2.imwrite('temp2/%s_debug_source.png' % name, img)
     img_bw = extract_coffee_color_as_new_image(img)
-    cv2.imwrite('temp2/%s_debug_output.png' % name, img_bw)
+    # cv2.imwrite('temp2/%s_debug_output.png' % name, img_bw)
 
     X_OFFSETS = [5, -5, 15, -15]
     Y_OFFSET = 6
@@ -218,15 +221,12 @@ def get_coffee_level(img, position, name):
     return result, result/7
 
 
-for img_file in sys.argv[1:]:
-    # Load an color image in grayscale
-    # print "Opening", img_file
-    img = cv2.imread(img_file, cv2.IMREAD_COLOR)
-
+def process_image(img, img_file):
     # TODO: Crop original image if needed
     # img = get_sub_image(img, (300, 300), (700, 700))
 
     img3 = extract_red_color_as_new_image(img)
+    # cv2.imwrite('temp2/img3.png', img3)
     top_left, bottom_right = get_coffee_maker_aabb(img3)
 
     pot_tl, pot_br = get_coffee_pot_location(
@@ -265,7 +265,14 @@ for img_file in sys.argv[1:]:
 
     # img = get_sub_image(img, top_left, bottom_right)
     # img = cv2.resize(img, (0,0), fy=10, fx=10, interpolation=cv2.INTER_NEAREST)
+    return img
 
+
+for img_file in sys.argv[1:]:
+    # Load an color image in grayscale
+    # print "Opening", img_file
+    img = cv2.imread(img_file, cv2.IMREAD_COLOR)
+    img = process_image(img, img_file)
     our_file = 'temp/' + img_file.split('/')[1].split('.')[0] + '.png'
     # print "Writing", our_file
     cv2.imwrite(our_file, img)
