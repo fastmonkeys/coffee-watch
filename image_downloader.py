@@ -1,6 +1,7 @@
 import cv2
 import numpy
 import requests
+from time import sleep
 
 from stuff import process_image
 
@@ -8,7 +9,12 @@ s = requests.Session()
 s.auth = ('admin', '')
 
 while(True):
-    response = s.get('http://192.168.179.4/cgi/jpg/image.cgi')
+    try:
+        response = s.get('http://192.168.179.4/cgi/jpg/image.cgi', timeout=5)
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+        print "Timeout"
+        sleep(1)
+        continue
     if not response.ok:
         print response
         continue

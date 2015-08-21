@@ -7,7 +7,7 @@ import cv2
 
 def extract_red_color_as_new_image(img):
     lower = np.array([0, 0, 50], dtype="uint8")
-    upper = np.array([60, 60, 255], dtype="uint8")
+    upper = np.array([80, 80, 255], dtype="uint8")
 
     mask = cv2.inRange(img, lower, upper)
     mask_inv = cv2.bitwise_not(mask)
@@ -22,7 +22,7 @@ def extract_red_color_as_new_image(img):
 
 def extract_black_color_as_new_image(img):
     lower = np.array([0, 0, 0], dtype="uint8")
-    upper = np.array([40, 40, 40], dtype="uint8")
+    upper = np.array([50, 50, 50], dtype="uint8")
 
     mask = cv2.inRange(img, lower, upper)
     mask_inv = cv2.bitwise_not(mask)
@@ -96,20 +96,22 @@ def get_center_pole_location(img, pot_tl, pot_br):
     img_pot = extract_black_color_as_new_image(
         img_pot_org
     )
-    cv2.imwrite('temp2/img_pot.png', img_pot)
+    cv2.imwrite('temp2/img_pot_bw.png', img_pot)
     pot_w = pot_br[0] - pot_tl[0]
     pos_x = max(pot_tl[0] - 2*pot_w, 0)
 
     img[pot_tl[1]:pot_br[1], pos_x:pos_x + pot_w] = img_pot
     res = cv2.matchTemplate(img_pot, pole_image, cv2.TM_CCOEFF)
+    # cv2.imwrite('temp2/img_pot_res.png', res)
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
     top_left = max_loc
     real_top_left = (
         pot_tl[0] + top_left[0],
         pot_tl[1] + top_left[1]
     )
-    CENTER_POLE_MATCH_THRESHOLD = 10000000
+    CENTER_POLE_MATCH_THRESHOLD = 5000000
     CENTER_POLE_MATCH2_THRESHOLD = -100000
+    print "max_val: %d" % max_val
     # pole_image2 = cv2.imread('sample_images/sample3.png', cv2.IMREAD_COLOR)
     # h2, w2, d2 = pole_image2.shape
 
@@ -165,9 +167,9 @@ def get_coffee_level(img, position, name):
     img_bw = extract_coffee_color_as_new_image(img)
     # cv2.imwrite('temp2/%s_debug_output.png' % name, img_bw)
 
-    X_OFFSETS = [5, -5, 15, -15]
-    Y_OFFSET = 6
-    Y_MAX = 45
+    X_OFFSETS = [5, -5, 10, -10]
+    Y_OFFSET = 4
+    Y_MAX = 30
 
     lines = [
         (
@@ -246,7 +248,7 @@ def process_image(img, img_file):
     # img = get_sub_image(img, (300, 300), (700, 700))
 
     img3 = extract_red_color_as_new_image(img)
-    # cv2.imwrite('temp2/img3.png', img3)
+    cv2.imwrite('temp2/img3.png', img3)
     top_left, bottom_right = get_coffee_maker_aabb(img3)
 
     pot_tl, pot_br = get_coffee_pot_location(
