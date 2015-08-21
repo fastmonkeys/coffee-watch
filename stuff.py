@@ -240,6 +240,25 @@ def get_coffee_level(img, position, name):
         -1
     )
 
+    img_bw = get_sub_image(img_bw, (position[0] - 10, position[1] + 4), (position[0] + 10, position[1] + 33))
+    # print img_bw.shape
+
+    # img_asd = cv2.resize(img_bw, (1,Y_MAX), interpolation=cv2.INTER_AREA)
+    # print img_asd.shape
+    img_asd = cv2.reduce(img_bw, 1, cv2.cv.CV_REDUCE_AVG)
+    print img_asd.shape
+    img_asd2 = cv2.resize(img_asd, (10,Y_MAX), interpolation=cv2.INTER_AREA)
+
+    img[y_top:y_top+29, position[0] + 2*IMG_X_OFFSET:position[0] + 2*IMG_X_OFFSET+10] = img_asd2
+
+    # import pudb;pu.db
+    for i in range(29):
+        v = img_asd[i][0][0]
+        # print "i:%d %r" % (i, v)
+        if v < 10:
+            break;
+    return (29 - i) * 100 / 29
+
     return result, result/7
 
 
