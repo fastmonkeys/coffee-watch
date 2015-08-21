@@ -35,6 +35,21 @@ def extract_black_color_as_new_image(img):
     return img3
 
 
+def extract_black2_color_as_new_image(img):
+    lower = np.array([0, 0, 0], dtype="uint8")
+    upper = np.array([90, 90, 90], dtype="uint8")
+
+    mask = cv2.inRange(img, lower, upper)
+    mask_inv = cv2.bitwise_not(mask)
+    img3 = cv2.bitwise_and(img, img, mask=mask)
+
+    image = np.zeros(img3.shape, np.uint8)
+    image[:] = (255, 255, 255)
+
+    img3 = cv2.bitwise_or(img3, image, mask=mask_inv)
+    return img3
+
+
 def extract_coffee_color_as_new_image(img):
     lower = np.array([0, 0, 0], dtype="uint8")
     upper = np.array([45, 45, 45], dtype="uint8")
@@ -95,24 +110,29 @@ def get_center_pole_location(img, pot_tl, pot_br):
     )
     CENTER_POLE_MATCH_THRESHOLD = 10000000
     CENTER_POLE_MATCH2_THRESHOLD = -100000
-    pole_image2 = cv2.imread('sample_images/sample3.png', cv2.IMREAD_COLOR)
-    h2, w2, d2 = pole_image2.shape
-    img_src = get_sub_image(
-        img_pot,
-        (max_loc[0] + w/2 - ceil(w2/2.0), max_loc[1]),
-        (max_loc[0] + w/2 + ceil(w2/2.0), max_loc[1] + h2)
-    )
+    # pole_image2 = cv2.imread('sample_images/sample3.png', cv2.IMREAD_COLOR)
+    # h2, w2, d2 = pole_image2.shape
 
-    # cv2.rectangle(
-    #     img,
-    #     (real_top_left[0] + w/2 - w2/2, real_top_left[1]),
-    #     (real_top_left[0] + w/2 + w2/2, real_top_left[1] + h2),
-    #     (0, 0, 255),
-    #     2
+    # # img_pot2 = cv2.Canny(img_pot_org, 200, 500)
+    # img_pot2 = img_pot_org
+
+    # # cv2.imwrite('temp2/img_pot2.png', img_pot2)
+    # img_src = get_sub_image(
+    #     img_pot2,
+    #     (max_loc[0] + w/2 - ceil(w2/2.0), max_loc[1]),
+    #     (max_loc[0] + w/2 + ceil(w2/2.0), max_loc[1] + h2)
     # )
+
+    # # cv2.rectangle(
+    # #     img,
+    # #     (real_top_left[0] + w/2 - w2/2, real_top_left[1]),
+    # #     (real_top_left[0] + w/2 + w2/2, real_top_left[1] + h2),
+    # #     (0, 0, 255),
+    # #     2
+    # # )
     # import pudb;pu.db
-    res = cv2.matchTemplate(img_src, pole_image2, cv2.TM_CCOEFF)
-    min_val, max_val2, min_loc, max_loc = cv2.minMaxLoc(res)
+    # res = cv2.matchTemplate(img_src, pole_image2, cv2.TM_CCOEFF)
+    # min_val, max_val2, min_loc, max_loc = cv2.minMaxLoc(res)
 
     # cv2.imshow('image', cv2.resize(pole_image2, (0,0), fy=10, fx=10, interpolation=cv2.INTER_NEAREST))
     # cv2.waitKey(0)
@@ -130,8 +150,8 @@ def get_center_pole_location(img, pot_tl, pot_br):
         real_top_left[0] + w/2,
         real_top_left[1]
     ), (
-        (max_val > CENTER_POLE_MATCH_THRESHOLD) and
-        (max_val2 > CENTER_POLE_MATCH2_THRESHOLD)
+        (max_val > CENTER_POLE_MATCH_THRESHOLD) #and
+        # (max_val2 > CENTER_POLE_MATCH2_THRESHOLD)
     )
 
 
