@@ -169,7 +169,7 @@ def get_coffee_level(img, position, name):
 
     X_OFFSETS = [5, -5, 10, -10]
     Y_OFFSET = 4
-    Y_MAX = 30
+    Y_MAX = 29
 
     lines = [
         (
@@ -263,7 +263,7 @@ def process_image(img, img_file):
     pos, match = get_center_pole_location(img, pot_tl, pot_br)
     # print "Pot pos %r %r" % pos
     center_tl = pos[0], pos[1]
-    center_br = pos[0], pos[1] + 50
+    center_br = pos[0], pos[1] + 30
 
     if match:
         result = get_coffee_level(img, pos, img_file.split('/')[1].split('.')[0])
