@@ -76,9 +76,9 @@ def get_coffee_maker_aabb(img):
 
 
 def get_coffee_pot_location(img, top_left, bottom_right):
-    offset = (30, 14)
+    offset = (30, 12)
     offset = (offset[0] + top_left[0], offset[1] + top_left[1])
-    size = (42, 34)
+    size = (42, 36)
     top_left = (offset[0], offset[1])
     bottom_right = (offset[0]+size[0], offset[1]+size[1])
     return top_left, bottom_right
