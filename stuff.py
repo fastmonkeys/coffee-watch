@@ -101,7 +101,8 @@ def get_center_pole_location(img, pot_tl, pot_br):
     pos_x = max(pot_tl[0] - 2*pot_w, 0)
 
     img[pot_tl[1]:pot_br[1], pos_x:pos_x + pot_w] = img_pot
-    res = cv2.matchTemplate(img_pot, pole_image, cv2.TM_CCOEFF)
+    img_pot_det = get_sub_image(img_pot, (0, 0), (pot_br[0] - pot_tl[0], 14))
+    res = cv2.matchTemplate(img_pot_det, pole_image, cv2.TM_CCOEFF)
     # cv2.imwrite('temp2/img_pot_res.png', res)
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
     top_left = max_loc
@@ -246,7 +247,7 @@ def get_coffee_level(img, position, name):
     # img_asd = cv2.resize(img_bw, (1,Y_MAX), interpolation=cv2.INTER_AREA)
     # print img_asd.shape
     img_asd = cv2.reduce(img_bw, 1, cv2.cv.CV_REDUCE_AVG)
-    print img_asd.shape
+    # print img_asd.shape
     img_asd2 = cv2.resize(img_asd, (10,Y_MAX), interpolation=cv2.INTER_AREA)
 
     img[y_top:y_top+29, position[0] + 2*IMG_X_OFFSET:position[0] + 2*IMG_X_OFFSET+10] = img_asd2
@@ -257,7 +258,7 @@ def get_coffee_level(img, position, name):
         # print "i:%d %r" % (i, v)
         if v < 10:
             break;
-    return (29 - i) * 100 / 29
+    return (28 - i) * 100 / 29
 
     return result, result/7
 
