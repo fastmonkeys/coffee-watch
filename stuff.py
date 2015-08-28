@@ -35,51 +35,6 @@ def extract_color_as_new_image(img, limit):
     return img3
 
 
-def extract_black_color_as_new_image(img):
-    lower = np.array([0, 0, 0], dtype="uint8")
-    upper = np.array([70, 70, 70], dtype="uint8")
-
-    mask = cv2.inRange(img, lower, upper)
-    mask_inv = cv2.bitwise_not(mask)
-    img3 = cv2.bitwise_and(img, img, mask=mask)
-
-    image = np.zeros(img3.shape, np.uint8)
-    image[:] = (255, 255, 255)
-
-    img3 = cv2.bitwise_or(img3, image, mask=mask_inv)
-    return img3
-
-
-def extract_black2_color_as_new_image(img):
-    lower = np.array([0, 0, 0], dtype="uint8")
-    upper = np.array([90, 90, 90], dtype="uint8")
-
-    mask = cv2.inRange(img, lower, upper)
-    mask_inv = cv2.bitwise_not(mask)
-    img3 = cv2.bitwise_and(img, img, mask=mask)
-
-    image = np.zeros(img3.shape, np.uint8)
-    image[:] = (255, 255, 255)
-
-    img3 = cv2.bitwise_or(img3, image, mask=mask_inv)
-    return img3
-
-
-def extract_coffee_color_as_new_image(img):
-    lower = np.array([0, 0, 0], dtype="uint8")
-    upper = np.array([45, 45, 45], dtype="uint8")
-
-    mask = cv2.inRange(img, lower, upper)
-    mask_inv = cv2.bitwise_not(mask)
-    img3 = cv2.bitwise_and(img, img, mask=mask)
-
-    image = np.zeros(img3.shape, np.uint8)
-    image[:] = (255, 255, 255)
-
-    img3 = cv2.bitwise_or(img3, image, mask=mask_inv)
-    return img3
-
-
 def get_coffee_maker_aabb(img):
     template = cv2.imread('sample_images/sample.png', cv2.IMREAD_COLOR)
     w, h = template.shape[1], template.shape[0]
@@ -144,10 +99,7 @@ def get_coffee_pot_location(img, pot_tl, pot_br, img_file):
 
     max_val, real_top_left = sorted(places, key=lambda x: x[0])[-1]
     max_val = int(max_val / 10000)
-    img_pot = extract_black_color_as_new_image(
-        img_pot_org
-    )
-    cv2.imwrite('temp2/img_pot_bw.png', img_pot)
+
     CENTER_POLE_MATCH_THRESHOLD = 500
     print "Pot match: %d/%d" % (max_val, CENTER_POLE_MATCH_THRESHOLD)
 
@@ -205,66 +157,52 @@ def get_coffee_pot_location(img, pot_tl, pot_br, img_file):
 
 
 def get_coffee_level(img, position, name):
-    def measure_coffee_level(line):
-        # import pudb;pu.db
-        return sum(
-            1 for l in line
-            if not all(l[0])), not all(not x.all() for x in line[:3])
-    # cv2.imwrite('temp2/%s_debug_source.png' % name, img)
-    img_bw = extract_coffee_color_as_new_image(img)
-    # cv2.imwrite('temp2/%s_debug_output.png' % name, img_bw)
+    IMG_X_OFFSET = -30
+    IMG_W = 10
 
-    X_OFFSETS = [5, -5, 10, -10]
+    X_RANGE = 10
     Y_OFFSET = 4
     Y_MAX = 29
+    Y_DELTA = Y_MAX - Y_OFFSET
 
-    lines = [
-        (
-            (position[1] + Y_OFFSET, position[1] + Y_MAX),
-            (position[0] - x_offset, position[0] - x_offset)
-        ) for x_offset in X_OFFSETS
-    ]
-    # cv2.rectangle(img, center_tl, center_br, (0, 0, 255), 2)
-    line_images = [
-        img_bw[p[0][0]:p[0][1], p[1][0]:p[1][1]+1] for p in lines
-    ]
-    results = [measure_coffee_level(line) for line in line_images]
-    # for result, line in zip(results, lines):
-    #     color = (0, 255, 0)
-    #     if not result[1]:
-    #         color = (0, 0, 255)
-    #     cv2.rectangle(
-    #         img,
-    #         (line[1][0], line[0][0]),
-    #         (line[1][1], line[0][1]),
-    #         color,
-    #         1
-    #     )
-    #     if result[1]:
-    #         cv2.rectangle(
-    #             img,
-    #             (line[1][0]-1, line[0][1] - result[0]),
-    #             (line[1][1]+1, line[0][1] - result[0]),
-    #             (0, 255, 255),
-    #             1
-    #         )
-    results = sorted(r[0] for r in results if r[1])
+    position = (position[0], position[1] + Y_OFFSET)
 
-    if len(results) > 1:
-        result = results[1]
-    else:
-        print "Handle detection is too sensitive"
-        if results:
-            result = results[0]
-        else:
-            result = 0
+    img_bw = get_sub_image(
+        img,
+        (position[0] - X_RANGE, position[1]),
+        (position[0] + X_RANGE, position[1] + Y_DELTA)
+    )
+    # print img_bw.shape
 
-    # import pudb;pu.db
-    IMG_X_OFFSET = -60
-    IMG_W = 10
-    y_top = position[1] + Y_OFFSET
-    y_middle = position[1] + Y_MAX - result
-    y_bottom = position[1] + Y_MAX
+    our_file = 'temp2/coffee_avg_src.png'
+    cv2.imwrite(our_file, img_bw)
+
+    # img_asd = cv2.resize(img_bw, (1,Y_MAX), interpolation=cv2.INTER_AREA)
+    # print img_asd.shape
+    img_asd = cv2.reduce(img_bw, 1, cv2.cv.CV_REDUCE_AVG)
+    # print img_asd.shape
+    img_asd2 = cv2.resize(
+        img_asd,
+        (IMG_W, Y_DELTA),
+        interpolation=cv2.INTER_AREA
+    )
+
+    COFFEE_SKIP_HEIGHT = 3
+    levels = [img_asd[i][0][0] for i in range(img_bw.shape[0])]
+    threshold = sum(levels[0:COFFEE_SKIP_HEIGHT]) / COFFEE_SKIP_HEIGHT - 50
+
+    for i, v in enumerate(levels):
+        if i < 3:
+            continue
+        # print "i:%d %r" % (i, v)
+        if v < threshold:
+            break
+    result = Y_DELTA - i
+    print "Coffee: %d/%d" % (result, Y_MAX - COFFEE_SKIP_HEIGHT)
+
+    y_top = position[1]
+    y_middle = position[1] + Y_DELTA - result
+    y_bottom = position[1] + Y_DELTA
     cv2.rectangle(
         img,
         (position[0] + IMG_X_OFFSET-1, y_top-1),
@@ -287,32 +225,12 @@ def get_coffee_level(img, position, name):
         -1
     )
 
-    img_bw = get_sub_image(img, (position[0] - 10, position[1] + 4), (position[0] + 10, position[1] + 30))
-    # print img_bw.shape
+    img[
+        y_top:y_top+Y_DELTA,
+        position[0] + IMG_X_OFFSET - IMG_W:position[0] + IMG_X_OFFSET - IMG_W + 10
+    ] = img_asd2
 
-    our_file = 'temp2/coffee_avg_src.png'
-    cv2.imwrite(our_file, img_bw)
-
-    # img_asd = cv2.resize(img_bw, (1,Y_MAX), interpolation=cv2.INTER_AREA)
-    # print img_asd.shape
-    img_asd = cv2.reduce(img_bw, 1, cv2.cv.CV_REDUCE_AVG)
-    # print img_asd.shape
-    img_asd2 = cv2.resize(img_asd, (10,Y_MAX), interpolation=cv2.INTER_AREA)
-
-    img[y_top:y_top+29, position[0] + 2*IMG_X_OFFSET:position[0] + 2*IMG_X_OFFSET+10] = img_asd2
-
-    levels = [img_asd[i][0][0] for i in range(img_bw.shape[0])]
-    threshold = sum(levels[0:3]) / 3 - 50
-
-    for i, v in enumerate(levels):
-        if i < 3:
-            continue
-        # print "i:%d %r" % (i, v)
-        if v < threshold:
-            break
-    return (28 - i) * 100 / 29
-
-    return result, result/7
+    return int(result * 100 / Y_MAX)
 
 
 def process_image(img, img_file):
