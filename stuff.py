@@ -10,8 +10,14 @@ COFFEE_MAKES_COLOR_RANGES = [
     ((0, 100), (0, 100), (50, 255)),
 ]
 
+COFFEE_POT_TOP_COLOR_RANGES = [
+    ((0, 60), (0, 60), (0, 60)),
+    ((0, 100), (0, 100), (0, 100)),
+    ((0, 120), (0, 120), (0, 120)),
+]
 
-def extract_red_color_as_new_image(img, limit):
+
+def extract_color_as_new_image(img, limit):
     lower_limit = [limit[i][0] for i in range(3)]
     upper_limit = [limit[i][1] for i in range(3)]
 
@@ -31,7 +37,7 @@ def extract_red_color_as_new_image(img, limit):
 
 def extract_black_color_as_new_image(img):
     lower = np.array([0, 0, 0], dtype="uint8")
-    upper = np.array([50, 50, 50], dtype="uint8")
+    upper = np.array([70, 70, 70], dtype="uint8")
 
     mask = cv2.inRange(img, lower, upper)
     mask_inv = cv2.bitwise_not(mask)
@@ -84,7 +90,7 @@ def get_coffee_maker_aabb(img):
     return top_left, bottom_right, max_val
 
 
-def get_coffee_pot_location(img, top_left, bottom_right):
+def get_coffee_pot_location_offset(img, top_left, bottom_right):
     offset = (30, 12)
     offset = (offset[0] + top_left[0], offset[1] + top_left[1])
     size = (42, 36)
@@ -97,21 +103,13 @@ def get_sub_image(img, top_left, bottom_right):
     return img[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
 
 
-def get_center_pole_location(img, pot_tl, pot_br):
-    pole_image = cv2.imread('sample_images/sample2.png', cv2.IMREAD_COLOR)
-    h, w, d = pole_image.shape
-    img_pot_org = get_sub_image(img, pot_tl, pot_br)
-    cv2.imwrite('temp2/img_pot_org.png', img_pot_org)
-    img_pot = extract_black_color_as_new_image(
-        img_pot_org
-    )
-    cv2.imwrite('temp2/img_pot_bw.png', img_pot)
+def get_coffee_pot_aabb(img_pot, pot_tl, pot_br, sample_img):
     pot_w = pot_br[0] - pot_tl[0]
     pos_x = max(pot_tl[0] - 2*pot_w, 0)
 
     img[pot_tl[1]:pot_br[1], pos_x:pos_x + pot_w] = img_pot
     img_pot_det = get_sub_image(img_pot, (0, 0), (pot_br[0] - pot_tl[0], 14))
-    res = cv2.matchTemplate(img_pot_det, pole_image, cv2.TM_CCOEFF)
+    res = cv2.matchTemplate(img_pot_det, sample_img, cv2.TM_CCOEFF)
     # cv2.imwrite('temp2/img_pot_res.png', res)
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
     top_left = max_loc
@@ -119,9 +117,50 @@ def get_center_pole_location(img, pot_tl, pot_br):
         pot_tl[0] + top_left[0],
         pot_tl[1] + top_left[1]
     )
-    CENTER_POLE_MATCH_THRESHOLD = 5000000
-    CENTER_POLE_MATCH2_THRESHOLD = -100000
-    print "max_val: %d" % max_val
+    h, w, d = sample_img.shape
+
+    return (
+        real_top_left[0] + w/2,
+        real_top_left[1]
+    ), max_val
+
+
+def get_coffee_pot_location(img, pot_tl, pot_br, img_file):
+    pole_image = cv2.imread('sample_images/sample2.png', cv2.IMREAD_COLOR)
+    img_pot_org = get_sub_image(img, pot_tl, pot_br)
+    cv2.imwrite('temp2/coffee_pot_org.png', img_pot_org)
+
+    places = []
+
+    for i, limits in enumerate(COFFEE_POT_TOP_COLOR_RANGES):
+        img_pot = extract_color_as_new_image(img_pot_org, limits)
+        cv2.imwrite('temp2/coffee_pot_bw_%d.png' % i, img_pot)
+        top_left, max_val = get_coffee_pot_aabb(img_pot, pot_tl, pot_br, pole_image)
+        img_normal = img.copy()
+        bottom_right = (top_left[0], top_left[0] + 30)
+        cv2.rectangle(img_normal, top_left, bottom_right, (255, 0, 0), 2)
+        cv2.imwrite('temp2/coffee_maker_pos_%d.png' % i, img_normal)
+        places.append((max_val, top_left))
+
+    max_val, real_top_left = sorted(places, key=lambda x: x[0])[-1]
+    max_val = int(max_val / 10000)
+    img_pot = extract_black_color_as_new_image(
+        img_pot_org
+    )
+    cv2.imwrite('temp2/img_pot_bw.png', img_pot)
+    CENTER_POLE_MATCH_THRESHOLD = 500
+    print "Pot match: %d/%d" % (max_val, CENTER_POLE_MATCH_THRESHOLD)
+
+    ok = max_val > CENTER_POLE_MATCH_THRESHOLD
+    if ok:
+        our_file = 'temp/ok_pot_' + img_file.split('/')[1].split('.')[0] + '.png'
+        cv2.imwrite(our_file, img_pot_org)
+    else:
+        our_file = 'temp/fail_pot_' + img_file.split('/')[1].split('.')[0] + '_bw.png'
+        cv2.imwrite(our_file, img_pot)
+        our_file = 'temp/fail_pot_' + img_file.split('/')[1].split('.')[0] + '.png'
+        cv2.imwrite(our_file, img_pot_org)
+
     # pole_image2 = cv2.imread('sample_images/sample3.png', cv2.IMREAD_COLOR)
     # h2, w2, d2 = pole_image2.shape
 
@@ -159,10 +198,8 @@ def get_center_pole_location(img, pot_tl, pot_br):
     # print "initial: %s second: %s" % (max_val, max_val2)
 
     return (
-        real_top_left[0] + w/2,
-        real_top_left[1]
-    ), (
-        (max_val > CENTER_POLE_MATCH_THRESHOLD) #and
+        real_top_left,
+        ok #and
         # (max_val2 > CENTER_POLE_MATCH2_THRESHOLD)
     )
 
@@ -192,25 +229,25 @@ def get_coffee_level(img, position, name):
         img_bw[p[0][0]:p[0][1], p[1][0]:p[1][1]+1] for p in lines
     ]
     results = [measure_coffee_level(line) for line in line_images]
-    for result, line in zip(results, lines):
-        color = (0, 255, 0)
-        if not result[1]:
-            color = (0, 0, 255)
-        cv2.rectangle(
-            img,
-            (line[1][0], line[0][0]),
-            (line[1][1], line[0][1]),
-            color,
-            1
-        )
-        if result[1]:
-            cv2.rectangle(
-                img,
-                (line[1][0]-1, line[0][1] - result[0]),
-                (line[1][1]+1, line[0][1] - result[0]),
-                (0, 255, 255),
-                1
-            )
+    # for result, line in zip(results, lines):
+    #     color = (0, 255, 0)
+    #     if not result[1]:
+    #         color = (0, 0, 255)
+    #     cv2.rectangle(
+    #         img,
+    #         (line[1][0], line[0][0]),
+    #         (line[1][1], line[0][1]),
+    #         color,
+    #         1
+    #     )
+    #     if result[1]:
+    #         cv2.rectangle(
+    #             img,
+    #             (line[1][0]-1, line[0][1] - result[0]),
+    #             (line[1][1]+1, line[0][1] - result[0]),
+    #             (0, 255, 255),
+    #             1
+    #         )
     results = sorted(r[0] for r in results if r[1])
 
     if len(results) > 1:
@@ -250,8 +287,11 @@ def get_coffee_level(img, position, name):
         -1
     )
 
-    img_bw = get_sub_image(img_bw, (position[0] - 10, position[1] + 4), (position[0] + 10, position[1] + 33))
+    img_bw = get_sub_image(img, (position[0] - 10, position[1] + 4), (position[0] + 10, position[1] + 30))
     # print img_bw.shape
+
+    our_file = 'temp2/coffee_avg_src.png'
+    cv2.imwrite(our_file, img_bw)
 
     # img_asd = cv2.resize(img_bw, (1,Y_MAX), interpolation=cv2.INTER_AREA)
     # print img_asd.shape
@@ -261,8 +301,7 @@ def get_coffee_level(img, position, name):
 
     img[y_top:y_top+29, position[0] + 2*IMG_X_OFFSET:position[0] + 2*IMG_X_OFFSET+10] = img_asd2
 
-    # import pudb;pu.db
-    for i in range(29):
+    for i in range(img_bw.shape[0]):
         v = img_asd[i][0][0]
         # print "i:%d %r" % (i, v)
         if v < 10:
@@ -278,7 +317,7 @@ def process_image(img, img_file):
     places = []
 
     for i, limits in enumerate(COFFEE_MAKES_COLOR_RANGES):
-        img3 = extract_red_color_as_new_image(img, limits)
+        img3 = extract_color_as_new_image(img, limits)
         cv2.imwrite('temp2/coffee_maker_bw_%d.png' % i, img3)
         top_left, bottom_right, max_val = get_coffee_maker_aabb(img3)
         img_normal = img.copy()
@@ -288,7 +327,7 @@ def process_image(img, img_file):
 
     _, top_left, bottom_right = sorted(places, key=lambda x: x[0])[-1]
 
-    pot_tl, pot_br = get_coffee_pot_location(
+    pot_tl, pot_br = get_coffee_pot_location_offset(
         img,
         top_left,
         bottom_right
@@ -297,7 +336,7 @@ def process_image(img, img_file):
     # img_pot = cv2.Canny(img_pot,100,200)
 
 
-    pos, match = get_center_pole_location(img, pot_tl, pot_br)
+    pos, match = get_coffee_pot_location(img, pot_tl, pot_br, img_file)
     # print "Pot pos %r %r" % pos
     center_tl = pos[0], pos[1]
     center_br = pos[0], pos[1] + 30
