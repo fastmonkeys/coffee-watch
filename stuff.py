@@ -7,7 +7,7 @@ import cv2
 
 def extract_red_color_as_new_image(img):
     lower = np.array([0, 0, 50], dtype="uint8")
-    upper = np.array([80, 80, 255], dtype="uint8")
+    upper = np.array([100, 100, 255], dtype="uint8")
 
     mask = cv2.inRange(img, lower, upper)
     mask_inv = cv2.bitwise_not(mask)
