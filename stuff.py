@@ -8,12 +8,14 @@ import cv2
 COFFEE_MAKES_COLOR_RANGES = [
     ((0, 80), (0, 80), (50, 255)),
     ((0, 100), (0, 100), (50, 255)),
+    ((0, 20), (0, 20), (20, 100)),
 ]
 
 COFFEE_POT_TOP_COLOR_RANGES = [
     ((0, 60), (0, 60), (0, 60)),
     ((0, 100), (0, 100), (0, 100)),
     ((0, 120), (0, 120), (0, 120)),
+    ((0, 40), (0, 40), (0, 40)),
 ]
 
 
@@ -189,7 +191,7 @@ def get_coffee_level(img, position, name):
 
     COFFEE_SKIP_HEIGHT = 3
     levels = [img_asd[i][0][0] for i in range(img_bw.shape[0])]
-    threshold = sum(levels[0:COFFEE_SKIP_HEIGHT]) / COFFEE_SKIP_HEIGHT - 50
+    threshold = sum(levels[0:COFFEE_SKIP_HEIGHT]) / COFFEE_SKIP_HEIGHT * 0.65
 
     for i, v in enumerate(levels):
         if i < 3:
