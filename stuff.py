@@ -301,11 +301,15 @@ def get_coffee_level(img, position, name):
 
     img[y_top:y_top+29, position[0] + 2*IMG_X_OFFSET:position[0] + 2*IMG_X_OFFSET+10] = img_asd2
 
-    for i in range(img_bw.shape[0]):
-        v = img_asd[i][0][0]
+    levels = [img_asd[i][0][0] for i in range(img_bw.shape[0])]
+    threshold = sum(levels[0:3]) / 3 - 50
+
+    for i, v in enumerate(levels):
+        if i < 3:
+            continue
         # print "i:%d %r" % (i, v)
-        if v < 10:
-            break;
+        if v < threshold:
+            break
     return (28 - i) * 100 / 29
 
     return result, result/7
