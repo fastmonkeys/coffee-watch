@@ -64,7 +64,7 @@ def get_coffee_pot_aabb(img_pot, pot_tl, pot_br, sample_img):
     pot_w = pot_br[0] - pot_tl[0]
     pos_x = max(pot_tl[0] - 2*pot_w, 0)
 
-    img[pot_tl[1]:pot_br[1], pos_x:pos_x + pot_w] = img_pot
+    # img[pot_tl[1]:pot_br[1], pos_x:pos_x + pot_w] = img_pot
     img_pot_det = get_sub_image(img_pot, (0, 0), (pot_br[0] - pot_tl[0], 14))
     res = cv2.matchTemplate(img_pot_det, sample_img, cv2.TM_CCOEFF)
     # cv2.imwrite('temp2/img_pot_res.png', res)
