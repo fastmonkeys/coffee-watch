@@ -100,7 +100,7 @@ def get_coffee_pot_location(img, pot_tl, pot_br, img_file):
     max_val, real_top_left = sorted(places, key=lambda x: x[0])[-1]
     max_val = int(max_val / 10000)
 
-    CENTER_POLE_MATCH_THRESHOLD = 500
+    CENTER_POLE_MATCH_THRESHOLD = 550
     print "Pot match: %d/%d" % (max_val, CENTER_POLE_MATCH_THRESHOLD)
 
     ok = max_val > CENTER_POLE_MATCH_THRESHOLD
