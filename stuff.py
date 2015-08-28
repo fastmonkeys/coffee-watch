@@ -5,9 +5,18 @@ import numpy as np
 import cv2
 
 
-def extract_red_color_as_new_image(img):
-    lower = np.array([0, 0, 50], dtype="uint8")
-    upper = np.array([100, 100, 255], dtype="uint8")
+COFFEE_MAKES_COLOR_RANGES = [
+    ((0, 80), (0, 80), (50, 255)),
+    ((0, 100), (0, 100), (50, 255)),
+]
+
+
+def extract_red_color_as_new_image(img, limit):
+    lower_limit = [limit[i][0] for i in range(3)]
+    upper_limit = [limit[i][1] for i in range(3)]
+
+    lower = np.array(lower_limit, dtype="uint8")
+    upper = np.array(upper_limit, dtype="uint8")
 
     mask = cv2.inRange(img, lower, upper)
     mask_inv = cv2.bitwise_not(mask)
@@ -72,7 +81,7 @@ def get_coffee_maker_aabb(img):
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
     top_left = max_loc
     bottom_right = (top_left[0] + w, top_left[1] + h)
-    return top_left, bottom_right
+    return top_left, bottom_right, max_val
 
 
 def get_coffee_pot_location(img, top_left, bottom_right):
@@ -267,9 +276,18 @@ def process_image(img, img_file):
     # TODO: Crop original image if needed
     # img = get_sub_image(img, (300, 300), (700, 700))
 
-    img3 = extract_red_color_as_new_image(img)
-    cv2.imwrite('temp2/img3.png', img3)
-    top_left, bottom_right = get_coffee_maker_aabb(img3)
+    places = []
+
+    for i, limits in enumerate(COFFEE_MAKES_COLOR_RANGES):
+        img3 = extract_red_color_as_new_image(img, limits)
+        cv2.imwrite('temp2/coffee_maker_bw_%d.png' % i, img3)
+        top_left, bottom_right, max_val = get_coffee_maker_aabb(img3)
+        img_normal = img.copy()
+        cv2.rectangle(img_normal, top_left, bottom_right, (255, 0, 0), 2)
+        cv2.imwrite('temp2/coffee_maker_pos_%d.png' % i, img_normal)
+        places.append((max_val, top_left, bottom_right))
+
+    _, top_left, bottom_right = sorted(places, key=lambda x: x[0])[-1]
 
     pot_tl, pot_br = get_coffee_pot_location(
         img,
