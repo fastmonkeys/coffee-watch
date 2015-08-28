@@ -273,8 +273,7 @@ def get_coffee_level(img, position, name):
 
 
 def process_image(img, img_file):
-    # TODO: Crop original image if needed
-    # img = get_sub_image(img, (300, 300), (700, 700))
+    img = get_sub_image(img, (520, 200), (720, 350))
 
     places = []
 
