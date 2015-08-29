@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy
 import requests
@@ -6,11 +7,18 @@ from time import sleep
 from stuff import process_image
 
 s = requests.Session()
-s.auth = ('admin', '')
+s.auth = (
+    os.environ.get('CAMERA_USERNAME', 'admin'),
+    os.environ.get('CAMERA_PASSWORD', '')
+)
+img_url = os.environ.get(
+    'CAMERA_IMAGE_URL',
+    'http://192.168.179.4/cgi/jpg/image.cgi'
+)
 
 while(True):
     try:
-        response = s.get('http://192.168.179.4/cgi/jpg/image.cgi', timeout=5)
+        response = s.get(img_url, timeout=5)
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         print "Timeout"
         sleep(1)

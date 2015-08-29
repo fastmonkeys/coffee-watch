@@ -1,5 +1,4 @@
 import sys
-from math import ceil
 
 import numpy as np
 import cv2
