@@ -19,6 +19,9 @@ img_url = os.environ.get(
 )
 from server import db, Measurement
 
+SUCCESS_INTERVAL = int(os.environ.get('SUCCESS_INTERVAL', '30'))
+FAILURE_INTERVAL = int(os.environ.get('FAILURE_INTERVAL', '2'))
+
 
 def send_measurement(value):
     db.session.add(Measurement(
@@ -49,9 +52,9 @@ if __name__ == "__main__":
         img, value = process_image(img, 'memory/memory.jpg')
         if value is not None:
             send_measurement(value)
-            sleep(30)
+            sleep(SUCCESS_INTERVAL)
         else:
-            sleep(5)
+            sleep(FAILURE_INTERVAL)
         if window:
             cv2.imshow('image', img)
             if cv2.waitKey(1) != -1:
