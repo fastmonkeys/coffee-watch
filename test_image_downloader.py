@@ -16,6 +16,6 @@ response = s.get(img_url)
 if not response.ok:
     print response
 else:
-    filename = time.strftime('temp3/%d-%m_%H%M%S.jpg')
+    filename = time.strftime('sample_images/%d-%m_%H%M%S.jpg')
     with open(filename, 'wb') as f:
         f.write(response.content)

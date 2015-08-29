@@ -1,8 +1,10 @@
 import os
+import sys
 import cv2
 import numpy
 import requests
 from time import sleep
+from datetime import datetime
 
 from image_processor import process_image
 
@@ -15,21 +17,43 @@ img_url = os.environ.get(
     'CAMERA_IMAGE_URL',
     'http://192.168.179.4/cgi/jpg/image.cgi'
 )
+from server import db, Measurement
 
-while(True):
-    try:
-        response = s.get(img_url, timeout=5)
-    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
-        print "Timeout"
-        sleep(1)
-        continue
-    if not response.ok:
-        print response
-        continue
-    buf = numpy.frombuffer(response.content, dtype="int8")
-    img = cv2.imdecode(buf, cv2.IMREAD_COLOR)
-    img, value = process_image(img, 'memory/memory.jpg')
-    cv2.imshow('image', img)
-    if cv2.waitKey(1) != -1:
-        break
-cv2.destroyAllWindows()
+
+def send_measurement(value):
+    db.session.add(Measurement(
+        value=value,
+        timestamp=datetime.now()
+    ))
+    db.session.commit()
+
+
+if __name__ == "__main__":
+    window = '-window' in sys.argv
+
+    while(True):
+        try:
+            response = s.get(img_url, timeout=5)
+        except (
+            requests.exceptions.Timeout,
+            requests.exceptions.ConnectionError
+        ):
+            print "Timeout"
+            sleep(1)
+            continue
+        if not response.ok:
+            print response
+            continue
+        buf = numpy.frombuffer(response.content, dtype="int8")
+        img = cv2.imdecode(buf, cv2.IMREAD_COLOR)
+        img, value = process_image(img, 'memory/memory.jpg')
+        if value is not None:
+            send_measurement(value)
+            sleep(30)
+        else:
+            sleep(5)
+        if window:
+            cv2.imshow('image', img)
+            if cv2.waitKey(1) != -1:
+                break
+    cv2.destroyAllWindows()
