@@ -1,10 +1,34 @@
-brew install opencv
+Coffee-watch
+============
 
-mkvirtualenv coffee-watch
-use_env coffee-watch
-pip install numpy
-pip install matplotlib
-pip install requests
+Coffee-watch is a tool that downloads images of coffee maker from a webcam,
+processes the images and lists the current coffee level to a webserver. Image
+processing is done using OpenCV and the project only aims to support the coffee
+ maker at our office.
 
-ln -s /usr/local/Cellar/opencv/2.4.11_1/lib/python2.7/site-packages/cv.py ~/.virtualenvs/coffee-watch/lib/python2.7/site-packages
-ln -s /usr/local/Cellar/opencv/2.4.11_1/lib/python2.7/site-packages/cv2.so ~/.virtualenvs/coffee-watch/lib/python2.7/site-packages
+Instructions:
+-------------
+
+ - Step 0: Install OpenCV
+
+ - Step 1: Setup + start the server:
+
+```
+pip install -r requirements.txt
+createdb coffee_watch
+export DATABASE_URI=postgresql://localhost/coffee_watch
+python server.py -create
+python server.py
+```
+
+Step 2: Start image_downloader
+
+```
+export DATABASE_URI=...
+export CAMERA_USERNAME=...
+export CAMERA_PASSWORD=...
+export CAMERA_IMAGE_URL=...
+python image_downloader.py
+```
+
+Debug images can be found in debug_output folder.
