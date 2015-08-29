@@ -213,6 +213,7 @@ def process_image(img, img_file):
     center_tl = pos[0], pos[1]
     center_br = pos[0], pos[1] + 30
 
+    result = None
     if match:
         result = get_coffee_level(
             img,
@@ -228,11 +229,11 @@ def process_image(img, img_file):
     cv2.rectangle(img, top_left, bottom_right, (255, 0, 0), 2)
     cv2.rectangle(img, pot_tl, pot_br, (200, 200, 200), 2)
 
-    return img
+    return img, result
 
 
 for img_file in sys.argv[1:]:
     img = cv2.imread(img_file, cv2.IMREAD_COLOR)
-    img = process_image(img, img_file)
+    img, value = process_image(img, img_file)
     our_file = 'temp/' + img_file.split('/')[1].split('.')[0] + '.png'
     cv2.imwrite(our_file, img)
