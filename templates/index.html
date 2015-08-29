@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coffee watch</title>
+</head>
+<body>
+<h1>Measurements:</h1>
+{% for m in measurements %}
+    {{ m.timestamp }}: {{ m.value }}</br>
+{% endfor %}
+</body>
+</html>
