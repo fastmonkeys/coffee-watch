@@ -80,18 +80,18 @@ def get_coffee_pot_aabb(img_pot, pot_tl, pot_br, sample_img):
 def get_coffee_pot_location(img, pot_tl, pot_br, img_file):
     pole_image = cv2.imread('sample_images/sample2.png', cv2.IMREAD_COLOR)
     img_pot_org = get_sub_image(img, pot_tl, pot_br)
-    cv2.imwrite('temp2/coffee_pot_org.png', img_pot_org)
+    cv2.imwrite('debug_output/coffee_pot_org.png', img_pot_org)
 
     places = []
 
     for i, limits in enumerate(COFFEE_POT_TOP_COLOR_RANGES):
         img_pot = extract_color_as_new_image(img_pot_org, limits)
-        cv2.imwrite('temp2/coffee_pot_bw_%d.png' % i, img_pot)
+        cv2.imwrite('debug_output/coffee_pot_bw_%d.png' % i, img_pot)
         top_left, max_val = get_coffee_pot_aabb(img_pot, pot_tl, pot_br, pole_image)
         img_normal = img.copy()
         bottom_right = (top_left[0], top_left[0] + 30)
         cv2.rectangle(img_normal, top_left, bottom_right, (255, 0, 0), 2)
-        cv2.imwrite('temp2/coffee_maker_pos_%d.png' % i, img_normal)
+        cv2.imwrite('debug_output/coffee_maker_pos_%d.png' % i, img_normal)
         places.append((max_val, top_left))
 
     max_val, real_top_left = sorted(places, key=lambda x: x[0])[-1]
@@ -102,12 +102,12 @@ def get_coffee_pot_location(img, pot_tl, pot_br, img_file):
 
     ok = max_val > CENTER_POLE_MATCH_THRESHOLD
     if ok:
-        our_file = 'temp/ok_pot_' + img_file.split('/')[1].split('.')[0] + '.png'
+        our_file = 'debug_output/ok_pot_' + img_file.split('/')[1].split('.')[0] + '.png'
         cv2.imwrite(our_file, img_pot_org)
     else:
-        our_file = 'temp/fail_pot_' + img_file.split('/')[1].split('.')[0] + '_bw.png'
+        our_file = 'debug_output/fail_pot_' + img_file.split('/')[1].split('.')[0] + '_bw.png'
         cv2.imwrite(our_file, img_pot)
-        our_file = 'temp/fail_pot_' + img_file.split('/')[1].split('.')[0] + '.png'
+        our_file = 'debug_output/fail_pot_' + img_file.split('/')[1].split('.')[0] + '.png'
         cv2.imwrite(our_file, img_pot_org)
 
     return real_top_left, ok
@@ -130,7 +130,7 @@ def get_coffee_level(img, position, name):
         (position[0] + X_RANGE, position[1] + Y_DELTA)
     )
 
-    our_file = 'temp2/coffee_avg_src.png'
+    our_file = 'debug_output/coffee_avg_src.png'
     cv2.imwrite(our_file, img_bw)
 
     # img_coffee_level = cv2.resize(img_bw, (1,Y_MAX), interpolation=cv2.INTER_AREA)
@@ -194,11 +194,11 @@ def process_image(img, img_file):
 
     for i, limits in enumerate(COFFEE_MAKES_COLOR_RANGES):
         img3 = extract_color_as_new_image(img, limits)
-        cv2.imwrite('temp2/coffee_maker_bw_%d.png' % i, img3)
+        cv2.imwrite('debug_output/coffee_maker_bw_%d.png' % i, img3)
         top_left, bottom_right, max_val = get_coffee_maker_aabb(img3)
         img_normal = img.copy()
         cv2.rectangle(img_normal, top_left, bottom_right, (255, 0, 0), 2)
-        cv2.imwrite('temp2/coffee_maker_pos_%d.png' % i, img_normal)
+        cv2.imwrite('debug_output/coffee_maker_pos_%d.png' % i, img_normal)
         places.append((max_val, top_left, bottom_right))
 
     _, top_left, bottom_right = sorted(places, key=lambda x: x[0])[-1]
@@ -235,5 +235,5 @@ def process_image(img, img_file):
 for img_file in sys.argv[1:]:
     img = cv2.imread(img_file, cv2.IMREAD_COLOR)
     img, value = process_image(img, img_file)
-    our_file = 'temp/' + img_file.split('/')[1].split('.')[0] + '.png'
+    our_file = 'debug_output/' + img_file.split('/')[1].split('.')[0] + '.png'
     cv2.imwrite(our_file, img)
