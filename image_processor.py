@@ -232,8 +232,9 @@ def process_image(img, img_file):
     return img, result
 
 
-for img_file in sys.argv[1:]:
-    img = cv2.imread(img_file, cv2.IMREAD_COLOR)
-    img, value = process_image(img, img_file)
-    our_file = 'debug_output/' + img_file.split('/')[1].split('.')[0] + '.png'
-    cv2.imwrite(our_file, img)
+if __name__ == "__main__":
+    for img_file in sys.argv[1:]:
+        img = cv2.imread(img_file, cv2.IMREAD_COLOR)
+        img, value = process_image(img, img_file)
+        our_file = 'debug_output/' + img_file.split('/')[1].split('.')[0] + '.png'
+        cv2.imwrite(our_file, img)
