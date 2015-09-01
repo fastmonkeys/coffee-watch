@@ -3,6 +3,7 @@ import sys
 import cv2
 import numpy
 import requests
+import socket
 from time import sleep
 from datetime import datetime
 
@@ -39,7 +40,8 @@ if __name__ == "__main__":
             response = s.get(img_url, timeout=5)
         except (
             requests.exceptions.Timeout,
-            requests.exceptions.ConnectionError
+            requests.exceptions.ConnectionError,
+            socket.timeout
         ):
             print "Timeout"
             sleep(1)
