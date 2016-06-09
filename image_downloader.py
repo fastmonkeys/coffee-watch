@@ -43,11 +43,11 @@ if __name__ == "__main__":
             requests.exceptions.ConnectionError,
             socket.timeout
         ):
-            print "Timeout"
+            print("Timeout")
             sleep(1)
             continue
         if not response.ok:
-            print response
+            print(response)
             continue
         buf = numpy.frombuffer(response.content, dtype="int8")
         img = cv2.imdecode(buf, cv2.IMREAD_COLOR)

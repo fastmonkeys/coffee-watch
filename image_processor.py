@@ -98,7 +98,7 @@ def get_coffee_pot_location(img, pot_tl, pot_br, img_file):
     max_val = int(max_val / 10000)
 
     CENTER_POLE_MATCH_THRESHOLD = 550
-    print "Pot match: %d/%d" % (max_val, CENTER_POLE_MATCH_THRESHOLD)
+    print("Pot match: %d/%d" % (max_val, CENTER_POLE_MATCH_THRESHOLD))
 
     ok = max_val > CENTER_POLE_MATCH_THRESHOLD
     if ok:
@@ -152,7 +152,7 @@ def get_coffee_level(img, position, name):
         if v < threshold:
             break
     result = Y_DELTA - i
-    print "Coffee: %d/%d" % (result, Y_MAX - COFFEE_SKIP_HEIGHT)
+    print("Coffee: %d/%d" % (result, Y_MAX - COFFEE_SKIP_HEIGHT))
 
     y_top = position[1]
     y_middle = position[1] + Y_DELTA - result
@@ -220,11 +220,11 @@ def process_image(img, img_file):
             pos,
             img_file.split('/')[1].split('.')[0]
         )
-        print "%s: %s" % (result, img_file)
+        print("%s: %s" % (result, img_file))
         cv2.rectangle(img, center_tl, center_br, (255, 255, 255), 2)
     else:
         cv2.rectangle(img, center_tl, center_br, (0, 0, 255), 2)
-        print "No pot: %s" % img_file
+        print("No pot: %s" % img_file)
 
     cv2.rectangle(img, top_left, bottom_right, (255, 0, 0), 2)
     cv2.rectangle(img, pot_tl, pot_br, (200, 200, 200), 2)

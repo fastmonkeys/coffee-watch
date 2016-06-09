@@ -14,7 +14,7 @@ img_url = os.environ.get(
 
 response = s.get(img_url)
 if not response.ok:
-    print response
+    print(response)
 else:
     filename = time.strftime('sample_images/%d-%m_%H%M%S.jpg')
     with open(filename, 'wb') as f:

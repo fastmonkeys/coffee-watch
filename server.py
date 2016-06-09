@@ -28,10 +28,10 @@ def hello_world():
 
 if __name__ == "__main__":
     if '-create' in sys.argv:
-        print "Creating tables"
+        print("Creating tables")
         db.metadata.create_all(db.engine)
     elif '-dummy' in sys.argv:
-        print "Creating dummy data"
+        print("Creating dummy data")
         for i in range(100):
             db.session.add(Measurement(
                 value=i,
@@ -40,8 +40,8 @@ if __name__ == "__main__":
         db.session.commit()
 
     else:
-        print "Server start"
+        print("Server start")
         try:
             app.run(host='0.0.0.0', port=8080)
         except KeyboardInterrupt:
-            print "Shutdown"
+            print("Shutdown")
