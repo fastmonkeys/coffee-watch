@@ -1,5 +1,6 @@
 import os
 import sys
+sys.path.append('/usr/local/lib/python2.7/site-packages')
 import cv2
 import numpy
 import requests
@@ -7,7 +8,7 @@ import socket
 from time import sleep
 from datetime import datetime
 
-from image_processor import process_image
+from image_processor import preprocess_image, process_image
 
 s = requests.Session()
 s.auth = (
@@ -51,6 +52,7 @@ if __name__ == "__main__":
             continue
         buf = numpy.frombuffer(response.content, dtype="int8")
         img = cv2.imdecode(buf, cv2.IMREAD_COLOR)
+        img = preprocess_image(img)
         img, value = process_image(img, 'memory/memory.jpg')
         if window:
             cv2.imshow('image', img)

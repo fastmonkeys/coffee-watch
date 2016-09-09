@@ -11,6 +11,9 @@ COFFEE_MAKER_MASK_FILE = 'sample_images/coffee_maker_sample_mask.png'
 
 COFFEE_MAKES_COLOR_RANGES = [
     ((0, 80), (0, 80), (0, 80)),
+    ((0, 100), (0, 100), (0, 100)),
+    ((0, 120), (0, 120), (0, 120)),
+    ((0, 140), (0, 140), (0, 140)),
 ]
 
 COFFEE_POT_TOP_COLOR_RANGES = [
