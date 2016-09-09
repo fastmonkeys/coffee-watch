@@ -209,7 +209,7 @@ def rotate_image(img, degrees):
 
 def preprocess_image(img):
     img = rotate_image(img, -90)
-    img = get_sub_image(img, (650, 130), (960, 350))
+    img = get_sub_image(img, (450, 50), (960, 350))
     return img
 
 
