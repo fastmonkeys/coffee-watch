@@ -87,15 +87,16 @@ def get_coffee_level(img):
     levels = [
         img_coffee_level[i][0][0] for i in range(img_coffee_level.shape[0])
     ]
-    COFFEE_SKIP_HEIGHT = 1 # TODO: How much we have certain black to measure blackness threshold ***********
-    threshold = sum(levels[0:COFFEE_SKIP_HEIGHT]) / COFFEE_SKIP_HEIGHT * 0.80
 
-    for i, v in enumerate(levels):
-        # print "i:%d %r" % (i, v)
-        if v < threshold:
-            break
-    result = Y_MAX - i
-    print("Coffee: %d/%d" % (result, Y_MAX - COFFEE_SKIP_HEIGHT))
+    diffs = [
+        (i, int(levels[i]) - int(levels[i+1]))
+        for i in range(len(levels)-1)
+    ]
+
+    diffs = sorted(diffs, lambda x, y: y[1] - x[1])
+
+    result = Y_MAX - diffs[0][0]
+    print("Coffee: %d/%d" % (result, Y_MAX))
 
     return int(result * 100 / Y_MAX), img_coffee_level
 
