@@ -8,6 +8,7 @@ import cv2
 debugging = False
 
 COFFEE_MAKER_MASK_FILE = 'sample_images/coffee_maker_sample_mask.png'
+COFFEE_MAKER_MASK_THRESHOLD = 1000
 
 COFFEE_MAKES_COLOR_RANGES = [
     ((0, 80), (0, 80), (0, 80)),
@@ -117,7 +118,13 @@ def process_image(img, img_file):
 
     img = get_sub_image(img, top_left, bottom_right)
 
-    print("Coffee maker mask score: %s" % score)
+    score = int(score / 1000000)
+
+    if score < COFFEE_MAKER_MASK_THRESHOLD:
+        print("Coffee maker mask score: %s, failed" % score)
+        return img, None
+
+    print("Coffee maker mask score: %s, success" % score)
     debug(img, 'coffee_maker_pos')
 
     pot_tl, pot_br = (70, 90), (120, 170)
