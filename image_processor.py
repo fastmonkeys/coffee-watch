@@ -10,6 +10,8 @@ debugging = False
 COFFEE_MAKER_MASK_FILE = 'sample_images/coffee_maker_sample_mask.png'
 COFFEE_MAKER_MASK_THRESHOLD = 1000
 
+COFFEE_POT_MASK_THRESHOLD = 100000
+
 COFFEE_MAKES_COLOR_RANGES = [
     ((0, 80), (0, 80), (0, 80)),
     ((0, 100), (0, 100), (0, 100)),
@@ -17,12 +19,7 @@ COFFEE_MAKES_COLOR_RANGES = [
     ((0, 140), (0, 140), (0, 140)),
 ]
 
-COFFEE_POT_TOP_COLOR_RANGES = [
-    ((0, 60), (0, 60), (0, 60)),
-    ((0, 100), (0, 100), (0, 100)),
-    ((0, 120), (0, 120), (0, 120)),
-    ((0, 40), (0, 40), (0, 40)),
-]
+COFFEE_POT_TOP_COLOR_RANGE = ((0, 90), (0, 90), (0, 90))
 
 
 def extract_color_as_new_image(img, limit):
@@ -46,6 +43,7 @@ def extract_color_as_new_image(img, limit):
 def match_template(img, template):
     w, h = template.shape[1], template.shape[0]
     res = cv2.matchTemplate(img, template, cv2.TM_CCOEFF)
+
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
     top_left = max_loc
     bottom_right = (top_left[0] + w, top_left[1] + h)
@@ -134,9 +132,14 @@ def process_image(img, img_file):
 
     h, w, d = img_pot_with_top.shape
 
+    IMG_POT_OFFSET = (25, 2)
+
     img_pot_confirmer = get_sub_image(
         img_pot_with_top.copy(),
-        pot_header_tl,
+        (
+            pot_header_tl[0] + IMG_POT_OFFSET[0],
+            pot_header_tl[1] + IMG_POT_OFFSET[1]
+        ),
         pot_header_br
     )
     img_pot = get_sub_image(
@@ -145,16 +148,24 @@ def process_image(img, img_file):
         (w, h)
     )
 
+    debug(img_pot_confirmer, 'coffee_pot_confirmer_before')
+    img_pot_confirmer = 255 - extract_color_as_new_image(
+        img_pot_confirmer,
+        COFFEE_POT_TOP_COLOR_RANGE
+    )
+    debug(img_pot_confirmer, 'coffee_pot_confirmer')
+
     cv2.rectangle(img_pot_with_top, pot_header_tl, pot_header_br, (255, 0, 0), 2)
 
     debug(img_pot_with_top, 'coffee_pot_pos')
 
-    # Why this isn't working??? *****************************************************************************
-    black_template = np.zeros(img_pot_confirmer.shape, np.uint8)
+    score = img_pot_confirmer.sum()
 
-    _, _, score = match_template(img_pot_confirmer, black_template)
+    if score < COFFEE_POT_MASK_THRESHOLD:
+        print("Pot confirmer mask score: %s, failed, %s" % (score, img_file))
+        return img, None
 
-    print("Pot confirmer mask score: %s" % score)
+    print("Pot confirmer mask score: %s, success, %s" % (score, img_file))
 
     result = None
     result, coffee_level_image = get_coffee_level(img_pot)
