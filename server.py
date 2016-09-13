@@ -35,7 +35,7 @@ def hello_world():
 
 @app.route('/api')
 def api():
-    measures = list(reversed(Measurement.query.order_by(Measurement.timestamp.desc()).limit(1000).all()[300:]))
+    measures = list(reversed(Measurement.query.order_by(Measurement.timestamp.desc()).limit(1000).all()))
     smoothed = [sorted(measures[i:i+5], key=lambda a: a.value)[2] for i in range(len(measures) - 5)]
 
     asdf = smoothed[0]
@@ -43,11 +43,9 @@ def api():
     current = measures[-1]
 
     for item in smoothed:
-        print(item.value, asdf.value)
         if item.value > 60 and asdf.value < 40:
             asdf = item
             brewed = item
-            print('updated time')
         if item.value < 40:
             asdf = item
 
